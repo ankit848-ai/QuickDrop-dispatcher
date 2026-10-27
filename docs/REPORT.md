@@ -169,7 +169,7 @@ Benchmarks: `python benchmarks/benchmark.py`. 50 × 50 city, seed 42, one simula
 
 ## 9. Deployment
 
-* `vercel.json` sets `public/` as the static output directory, rewrites `/api/(.*)` to the `api/index.py` serverless function, includes the `quickdrop/` and `data/` packages in the function bundle, and sets `maxDuration` to 10 s.
+* Vercel detects the FastAPI app in `api/index.py` and routes every non-static request (`/api/*`) to it. `vercel.json` sets `public/` as the static output directory, includes the `quickdrop/` and `data/` packages in the function bundle, and sets `maxDuration` to 10 s.
 * `requirements.txt` contains only the runtime dependency (`fastapi`). Test, benchmark and dev tools are in `requirements-dev.txt`.
 * `api/index.py` adds the project root to `sys.path` so `quickdrop` and `data` import the same way locally and on Vercel.
 * Locally, `uvicorn api.index:app` serves both the API and the `public/` folder. On Vercel the static files are served by the CDN.

@@ -6,8 +6,5 @@
       "maxDuration": 10,
       "includeFiles": "{quickdrop,data}/**/*.py"
     }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" }
-  ]
+  }
 }

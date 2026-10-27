@@ -31,6 +31,9 @@
   working directory with `VERCEL=1` (static mount disabled), and the max-size request
   (200 riders, 2000 orders, 80×80) returned 200 in 0.8 s, well under the 10 s limit.
   Its JSON is ~2.1 MB, under Vercel's 4.5 MB response cap (routes are sent as flat cell indices).
+- **Live:** https://quickdrop-dispatcher.vercel.app. The first deploy returned 404 on `/api/*`. Vercel
+  now treats the project as a FastAPI backend and passes the *rewritten* path to the app, so the
+  `/api/(.*) → /api/index` rewrite in `vercel.json` broke routing. Fix: removed the rewrite.
 - Frontend default is 60 riders / 500 orders: 30 riders overloaded the city and made the
   demo all-red.
 - Utilization is shown without a "winner" highlight in the comparison table: higher utilization

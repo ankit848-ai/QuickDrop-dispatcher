@@ -2,7 +2,7 @@
 
 QuickDrop assigns incoming food orders to the nearest free rider on a city grid, routes riders around obstacles with BFS, and simulates a full day of deliveries. The algorithms run in a pure-Python engine where every data structure is hand-written: no `heapq`, no `queue`, no `networkx`. The results are shown in a live web app.
 
-**Live demo:** https://quickdrop.vercel.app *(replace with your URL after `vercel --prod`)*
+**Live demo:** https://quickdrop-dispatcher.vercel.app
 
 ![Average delivery time: greedy vs naive](benchmarks/results/avg_delivery_time.png)
 
@@ -132,7 +132,7 @@ When enough riders are available, choosing the nearest one saves roughly a third
    vercel --prod
    ```
 
-`vercel.json` serves `public/` as static files and routes `/api/*` to the FastAPI function in `api/index.py`. `requirements.txt` holds only `fastapi`, the runtime dependency.
+Vercel detects FastAPI in `api/index.py` and sends every non-static request (all `/api/*` routes) to it with the original path. `vercel.json` sets `public/` as the static folder and bundles the `quickdrop/` and `data/` packages into the function. Don't add a rewrite to `/api/index`: for FastAPI projects Vercel passes the *rewritten* path to the app, which turns every API call into a 404. `requirements.txt` holds only `fastapi`, the runtime dependency.
 
 To auto-deploy on every push, push the repo to GitHub and import it at https://vercel.com/new.
 
