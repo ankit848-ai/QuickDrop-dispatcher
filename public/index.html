@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickDrop dispatcher</title>
+  <meta name="description" content="Food delivery rider dispatcher built from scratch with heaps, priority queues and BFS.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand">QuickDrop</h1>
+    <p class="tagline">Assigns every food order to the nearest free rider, then routes them around the city.</p>
+  </header>
+
+  <main>
+    <section class="console" aria-label="Live simulation">
+      <div class="map-panel">
+        <div class="map-head">
+          <span class="clock" id="clock" aria-live="off">--:--</span>
+          <span class="live-stats" id="liveStats">Starting a simulation…</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="map" role="img" aria-label="City map with riders, restaurants and customers"></canvas>
+        </div>
+        <div class="player">
+          <button id="playBtn" class="btn-icon" type="button" aria-label="Pause">❚❚</button>
+          <input id="scrub" type="range" min="0" max="0" value="0" aria-label="Timeline">
+          <label class="speed">Speed
+            <input id="speed" type="range" min="1" max="60" value="12" aria-label="Animation speed">
+          </label>
+        </div>
+        <ul class="legend">
+          <li><i class="dot free"></i>Free rider</li>
+          <li><i class="dot busy"></i>Busy rider + route</li>
+          <li><i class="sq rest"></i>Restaurant</li>
+          <li><i class="dot cust"></i>Customer</li>
+          <li><i class="dot cust-wait"></i>Customer still waiting</li>
+          <li><i class="sq wall"></i>Blocked</li>
+        </ul>
+      </div>
+
+      <aside class="side">
+        <form id="controls" class="controls">
+          <label>Riders <input name="riders" type="number" min="1" max="200" value="60" required></label>
+          <label>Orders <input name="orders" type="number" min="1" max="2000" value="500" required></label>
+          <label>City size <input name="city_size" type="number" min="10" max="80" value="50" required></label>
+          <label>Seed <input name="seed" type="number" min="0" value="42" required></label>
+          <fieldset class="strategy">
+            <legend>Strategy</legend>
+            <label><input type="radio" name="strategy" value="greedy" checked> Nearest rider (heap)</label>
+            <label><input type="radio" name="strategy" value="naive"> First free rider (scan)</label>
+          </fieldset>
+          <button class="btn-primary" type="submit" id="runBtn">Run simulation</button>
+          <p class="form-msg" id="formMsg" role="status"></p>
+        </form>
+
+        <dl class="metrics" id="metrics">
+          <div><dt>Avg delivery</dt><dd id="mDelivery">–</dd></div>
+          <div><dt>Avg wait for rider</dt><dd id="mWait">–</dd></div>
+          <div><dt>Rider utilization</dt><dd id="mUtil">–</dd></div>
+          <div><dt>Orders per hour</dt><dd id="mOph">–</dd></div>
+        </dl>
+
+        <div class="queue">
+          <h2>Waiting queue <span id="queueCount" class="count">0</span></h2>
+          <p class="hint">VIP orders first, then oldest first.</p>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th scope="col">Order</th><th scope="col">Type</th><th scope="col">Placed</th><th scope="col">Waiting</th></tr></thead>
+              <tbody id="queueBody"><tr><td colspan="4" class="empty">No orders waiting.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="compare" aria-labelledby="compareTitle">
+      <div class="section-head">
+        <h2 id="compareTitle">Nearest rider vs first free rider</h2>
+        <p>Runs both strategies on the exact same city, riders and orders from the form above.</p>
+        <button class="btn-secondary" type="button" id="compareBtn">Compare strategies</button>
+      </div>
+      <div class="compare-body">
+        <div class="chart-box"><canvas id="compareChart" aria-label="Bar chart comparing strategies"></canvas></div>
+        <table class="compare-table" id="compareTable" hidden>
+          <thead><tr><th scope="col">Metric</th><th scope="col">Nearest (heap)</th><th scope="col">First free (scan)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="how" aria-labelledby="howTitle">
+      <h2 id="howTitle">How it works</h2>
+      <ol class="flow">
+        <li><b>An order arrives.</b> The event heap hands the simulator the next event in time order.</li>
+        <li><b>Pick a rider.</b> Free riders go into a min-heap keyed by Manhattan distance to the restaurant; the top is the nearest.</li>
+        <li><b>No one free?</b> The order joins a priority queue: VIP first, then oldest.</li>
+        <li><b>Route it.</b> BFS finds the shortest path around blocked cells: rider → restaurant → customer.</li>
+        <li><b>Delivery done.</b> The rider becomes free at the customer and takes the top waiting order.</li>
+      </ol>
+      <div class="ds-table-scroll">
+        <table class="ds-table">
+          <thead><tr><th scope="col">Structure</th><th scope="col">Used for</th><th scope="col">Key operations</th></tr></thead>
+          <tbody>
+            <tr><td>Binary min-heap</td><td>Nearest free rider; event list ordered by time</td><td>push / pop O(log n), peek O(1), heapify O(n)</td></tr>
+            <tr><td>Priority queue</td><td>Orders waiting for a rider (VIP, then oldest)</td><td>enqueue / dequeue O(log n)</td></tr>
+            <tr><td>Linked-list queue</td><td>BFS frontier</td><td>enqueue / dequeue O(1)</td></tr>
+            <tr><td>Hash map / set</td><td>Riders by id, free riders, blocked cells, cached BFS trees</td><td>lookup / insert / delete O(1) average</td></tr>
+            <tr><td>BFS on the grid</td><td>Shortest delivery route avoiding obstacles</td><td>O(W × H) per new source, O(path) once cached</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">Built from scratch in Python: no heapq, no queue module, no graph libraries.</footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
