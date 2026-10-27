@@ -145,3 +145,7 @@ To auto-deploy on every push, push the repo to GitHub and import it at https://v
 ## Author
 
 Ankit Dash
+
+## License
+
+Copyright © 2026 Ankit Dash. **All rights reserved.** You may view this code for evaluation, but you may not copy, modify, redistribute or submit it as your own work without written permission. See [LICENSE](LICENSE).

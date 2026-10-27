@@ -5,3 +5,4 @@ __pycache__/
 .vercel/
 data/*.csv
 node_modules/
+.claude/
